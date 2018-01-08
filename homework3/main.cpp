@@ -1,162 +1,138 @@
+#include <queue>
 #include <iostream>
 
 using namespace std;
-template<typename T>
+
 struct node
 {
-    T data;
-    node<T> * left;
-    node<T> * right;
+    int data;
+    struct node *left;
+    struct node *right;
+
+    node(int n)
+    {
+        data = n;
+        left = NULL;
+        right = NULL;
+    }
 };
-template<typename T>
-class tree
+
+void InOrder(struct node *root)
 {
-    node<T>* root;
-    void copy(node<T> *& pos,node<T> * const & r)
-    {
-        pos=NULL;
-        if(r)
-        {
-            pos->data=r->data;
-            copy(pos->left,r->left);
-            copy(pos->right,r->right);
-        }
-    }
-    void copyTree(const tree<T> & other)
-    {
-        copy(root,other.root);
-    }
-    void DeleteTree(node<T> * & pos)const
-    {
-        if(pos)
-        {
-            DeleteTree(pos->left);
-            DeleteTree(pos->right);
-            delete pos;
-            pos=NULL;
-        }
-    }
-    void pr(const node<T> *p)const
-    {
-        if(p)
-        {
+    if(! root)
+        return;
 
-            cout <<p->data<<" ";
-              pr(p->left);
-            pr(p->right);
-        }
+    InOrder(root->left);
+    cout<<root->data<<' ';
+    InOrder(root->right);
+}
 
-    }
-    void CreateTree(node<T> *&pos)const
-    {
-        T x;char c;
-        cout <<"root:";
-        cin>>x;
-        pos=new node<T> ;
-        pos->data=x;
-        pos->left=NULL;
-        pos->right=NULL;
-        cout <<"Left tree of "<<x <<" y/n?";
-        cin>>c;
-        if(c=='y')
-        {
-            CreateTree(pos->left);
-        }
-        cout <<"Right tree of " << x <<" y/n";
-        cin>>c;
-        if(c=='y')
-        {
-            CreateTree(pos->right);
-        }
-    }
-
-public:
-    void create()
-    {
-        CreateTree(root);
-    }
-    void print()const
-    {
-        pr(root);
-        cout <<endl;
-    }
-    void creatre3(const T & x,const tree<T> & l,const tree <T> & r)
-    {
-        if(root)
-        {
-            DeleteTree(root);
-        }
-        root=new node<T>;
-        root->data=x;
-        copy(root->left,l);
-        copy(root->right,r);
-
-    }
-    tree()
-    {
-        root=NULL;
-    }
-    tree(const tree<T> & other)
-    {
-        copyTree(other);
-    }
-    tree& operator=(const tree<T> & other)
-    {
-        if(this!=&other)
-        {
-            DeleteTree(root);
-            copyTree(other);
-        }
-        return * this;
-
-    }
-    ~tree()
-    {
-        DeleteTree(root);
-    }
-    bool empty()const
-    {
-        return root==NULL;
-    }
-    node<T> * getRoot()const
-    {
-        return root;
-    }
-    T rootTree()const
-    {
-        return root->data;
-    }
-    tree<T> lefttree()const
-    {
-        tree<T> t;
-        copy(t.root,root->left);
-        return t;
-    }
-    tree<T> righttree()const
-    {
-        tree<T> t;
-        copy(t.root,root->right);
-        return t;
-    }
-
-int height(node<T> *root)
+void swapSubtreesOfLevel(node *root,int k)
 {
-    if(root==NULL)
+    if(! root)
+        return;
+
+    queue<node *> Q;
+    Q.push(root);
+    Q.push(NULL);
+    int level = 1;
+
+    while(! Q.empty())
     {
-        return 0;
-    }
-    else
-    {
-        return 1+max(height(root->left),height(root->right));
+        node *tmp = Q.front();
+        Q.pop();
+
+        if(tmp == NULL)
+        {
+            if(! Q.empty())
+            {
+                Q.push(NULL);
+            }
+            level++;
+        }
+        else
+        {
+            if(level == k)
+            {
+                node *sw = tmp->left;
+                tmp->left = tmp->right;
+                tmp->right = sw;
+            }
+
+            if(tmp->left)
+                Q.push(tmp->left);
+
+            if(tmp->right)
+                Q.push(tmp->right);
+        }
     }
 }
 
-};
 
-int main()
-{
-    tree<int >t;
-    t.create();
-   cout <<t.height(t.getRoot())-1;
+int main() {
+    int N;
+    cin>>N;
+
+    node *root = NULL;
+    queue<node *> Q;
+    int level = 1;
+
+    if(N > 0)
+    {
+        root = new node(1);
+        Q.push(root);
+        Q.push(NULL);
+    }
+
+    while((N > 0) && ( ! Q.empty()))
+    {
+        node *tmp = Q.front();
+        Q.pop();
+
+        if(tmp == NULL)
+        {
+            if(!Q.empty())
+                Q.push(NULL);
+             level++;
+        }
+        else
+        {
+            int a,b;
+            cin>>a>>b;
+
+            if(a != -1)
+            {
+                tmp->left = new node(a);
+                Q.push(tmp->left);
+            }
+
+            if(b != -1)
+            {
+                tmp->right = new node(b);
+                Q.push(tmp->right);
+            }
+            N--;
+        }
+    }
+
+    int T;
+    cin>>T;
+
+    while(T > 0)
+    {
+        int k;
+        cin>>k;
+        int itr = 2;
+        int lvl = k;
+        while(lvl <= level )
+        {
+            swapSubtreesOfLevel(root,lvl);
+            lvl = itr * k;
+            itr++;
+        }
+        InOrder(root);
+        cout<<endl;
+        T--;
+    }
     return 0;
 }
